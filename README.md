@@ -1,16 +1,22 @@
 # JWT Auth in Redux and Rails
 
-**Disclaimer**: This is a sample application and walks through _one_
-possible auth implementation. It does not cover everything there is to know
-about auth and is intended as an introduction. Please do not blindly copy/paste
-the code here. Use this as a guide to get started.
+## Learning Goals
+
+- Learn the basics of auth using JWT
+
+**Disclaimer**: This is a sample application and walks through _one_ possible
+auth implementation. It does not cover everything there is to know about auth
+and is intended as an introduction. Please do not blindly copy/paste the code
+here. Use this as a guide to get started.
 
 **Second disclaimer**: there are tradeoffs to every auth implementation. To
 secure our application further, we should set our tokens to expire and make sure
 our app is being served over [HTTPS](https://en.wikipedia.org/wiki/HTTPS).
 Furthermore, there are some
 [tradeoffs to storing JWTs in browser `localStorage`](https://stormpath.com/blog/where-to-store-your-jwts-cookies-vs-html5-web-storage).
-[This StackOverflow post has a concise summary of the benefits/tradeoffs about where/how to store tokens client-side](https://stackoverflow.com/questions/35291573/csrf-protection-with-json-web-tokens/35347022#35347022).
+For a concise summary of the benefits/tradeoffs about where/how to store tokens
+client-side, check out
+[this StackOverflow post.]((https://stackoverflow.com/questions/35291573/csrf-protection-with-json-web-tokens/35347022#35347022))
 
 With that out of the way, here begins our journey:
 
@@ -37,8 +43,8 @@ $ bundle add faker
 If you get a gem not found error, try manually adding them to your
 [Gemfile][gemfile].
 
-Don't forget to uncomment `rack-cors` and `bcrypt` from your
-[Gemfile][gemfile] as well.
+Don't forget to uncomment `rack-cors` and `bcrypt` from your [Gemfile][gemfile]
+as well.
 
 Call `bundle install`. Your [Gemfile][gemfile] should look something like this:
 
@@ -70,23 +76,24 @@ gem 'rack-cors'
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
-  gem 'byebug', platforms: [:mri, :mingw, :x64_mingw]
+  gem 'byebug', platforms: %i[mri mingw x64_mingw]
 end
 
 group :development do
   gem 'listen', '~> 3.3'
+
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
   gem 'spring'
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
-gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
+gem 'tzinfo-data', platforms: %i[mingw mswin x64_mingw jruby]
 
-gem "jwt", "~> 2.2"
+gem 'jwt', '~> 2.2'
 
-gem "active_model_serializers", "~> 0.10.12"
+gem 'active_model_serializers', '~> 0.10.12'
 
-gem "faker", "~> 2.19"
+gem 'faker', '~> 2.19'
 ```
 
 Don't forget to enable
@@ -106,8 +113,8 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
     origins '*'
 
     resource '*',
-      headers: :any,
-      methods: [:get, :post, :put, :patch, :delete, :options, :head]
+             headers: :any,
+             methods: %i[get post put patch delete options head]
   end
 end
 ```
@@ -116,7 +123,7 @@ You can refer to the [rack-cors gem](https://github.com/cyu/rack-cors) for more
 information about this file.
 
 **Please don't forget to change these settings before deploying your app to the
-internet. _Please_**
+internet. _Please._**
 
 ### Creating Users
 
@@ -127,6 +134,7 @@ $ rails g model User username password_digest bio avatar
 $ rails g controller api/v1/users
 $ rails g serializer user
 $ rails db:migrate
+$ rails db:seed
 ```
 
 Add `has_secure_password` to [`app/models/user.rb`][user_model]. Recall that
@@ -273,11 +281,15 @@ class Api::V1::UsersController < ApplicationController
     if @user.valid?
       render json: { user: UserSerializer.new(@user) }, status: :created
     else
-      render json: { error: 'failed to create user' }, status: :unprocessable_entity
+      render json: {
+               error: 'failed to create user',
+             },
+             status: :unprocessable_entity
     end
   end
 
   private
+
   def user_params
     params.require(:user).permit(:username, :password, :bio, :avatar)
   end
@@ -286,7 +298,8 @@ end
 
 We can use the
 [built in Rails HTTP status code symbols](https://gist.github.com/mlanett/a31c340b132ddefa9cca)
-when sending responses to the client; `status: :unprocessable_entity`, for instance.
+when sending responses to the client; `status: :unprocessable_entity`, for
+instance.
 
 > Need a refresher on
 > [HTTP Status Codes](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status)?
@@ -315,8 +328,8 @@ Rails.application.routes.draw do
 end
 ```
 
-Take some time to test this either in
-[Postman](https://www.getpostman.com/apps) or with JavaScript fetch:
+Take some time to test this either in [Postman](https://www.getpostman.com/apps)
+or with JavaScript fetch:
 
 ```javascript
 fetch("http://localhost:3000/api/v1/users", {
@@ -339,7 +352,8 @@ fetch("http://localhost:3000/api/v1/users", {
   .then(console.log);
 ```
 
-**Note:** if you're using Postman and your formatting is set to "raw and JSON", remember to use double quotes ("") in both keys and values in the request.
+**Note:** if you're using Postman and your formatting is set to "raw and JSON",
+remember to use double quotes ("") in both keys and values in the request.
 
 Important! **Make Sure You Can POST and Create a New User Before Proceeding**.
 
@@ -501,7 +515,8 @@ allows us to **rescue** out of an exception in Ruby. Let's see an example in a
 
 ```ruby
 # in rails console
-invalid_token = "nnnnnnnooooooootttttt.vvvvvvaaaallliiiiidddddd.jjjjjjjwwwwwttttttt"
+invalid_token =
+  'nnnnnnnooooooootttttt.vvvvvvaaaallliiiiidddddd.jjjjjjjwwwwwttttttt'
 
 JWT.decode(invalid_token, 'my_s3cr3t', true, algorithm: 'HS256')
 
@@ -516,7 +531,8 @@ can account for this by **rescuing out of this exception**:
 
 ```ruby
 # in rails console
-invalid_token = "nnnnnnnooooooootttttt.vvvvvvaaaallliiiiidddddd.jjjjjjjwwwwwttttttt"
+invalid_token =
+  'nnnnnnnooooooootttttt.vvvvvvaaaallliiiiidddddd.jjjjjjjwwwwwttttttt'
 
 begin
   JWT.decode(invalid_token, 'my_s3cr3t', true, algorithm: 'HS256')
@@ -535,7 +551,6 @@ automatically obtaining the user whenever an authorization header is present:
 
 ```ruby
 class ApplicationController < ActionController::API
-
   def encode_token(payload)
     # don't forget to hide your secret in an environment variable
     JWT.encode(payload, 'my_s3cr3t')
@@ -594,6 +609,7 @@ class ApplicationController < ActionController::API
   def decoded_token
     if auth_header
       token = auth_header.split(' ')[1]
+
       # header: { 'Authorization': 'Bearer <token>' }
       begin
         JWT.decode(token, 'my_s3cr3t', true, algorithm: 'HS256')
@@ -615,7 +631,9 @@ class ApplicationController < ActionController::API
   end
 
   def authorized
-    render json: { message: 'Please log in' }, status: :unauthorized unless logged_in?
+    unless logged_in?
+      render json: { message: 'Please log in' }, status: :unauthorized
+    end
   end
 end
 ```
@@ -639,9 +657,16 @@ class Api::V1::UsersController < ApplicationController
     @user = User.create(user_params)
     if @user.valid?
       @token = encode_token(user_id: @user.id)
-      render json: { user: UserSerializer.new(@user), jwt: @token }, status: :created
+      render json: {
+               user: UserSerializer.new(@user),
+               jwt: @token,
+             },
+             status: :created
     else
-      render json: { error: 'failed to create user' }, status: :unprocessable_entity
+      render json: {
+               error: 'failed to create user',
+             },
+             status: :unprocessable_entity
     end
   end
 
@@ -678,8 +703,9 @@ You'll also need to store that token somewhere when the response comes back so
 that you can use it for subsequent requests.
 [`localStorage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage)
 works for this, although there are some
-[tradeoffs to storing JWTs in browser `localStorage`](https://stormpath.com/blog/where-to-store-your-jwts-cookies-vs-html5-web-storage) that are out of the scope of
-this lesson. Here's how you could use `localStorage`:
+[tradeoffs to storing JWTs in browser `localStorage`](https://stormpath.com/blog/where-to-store-your-jwts-cookies-vs-html5-web-storage)
+that are out of the scope of this lesson. Here's how you could use
+`localStorage`:
 
 ```js
 fetch("http://localhost:3000/api/v1/users", {
@@ -725,13 +751,21 @@ class Api::V1::AuthController < ApplicationController
 
   def create
     @user = User.find_by(username: user_login_params[:username])
+
     #User#authenticate comes from BCrypt
     if @user && @user.authenticate(user_login_params[:password])
       # encode token comes from ApplicationController
       token = encode_token({ user_id: @user.id })
-      render json: { user: UserSerializer.new(@user), jwt: token }, status: :accepted
+      render json: {
+               user: UserSerializer.new(@user),
+               jwt: token,
+             },
+             status: :accepted
     else
-      render json: { message: 'Invalid username or password' }, status: :unauthorized
+      render json: {
+               message: 'Invalid username or password',
+             },
+             status: :unauthorized
     end
   end
 
@@ -772,7 +806,6 @@ true && true
 
 true && false
 # => false
-
 
 true && not_a_variable
 # => NameError (undefined local variable or method `not_a_variable` for main:Object)
@@ -827,9 +860,16 @@ class Api::V1::UsersController < ApplicationController
     @user = User.create(user_params)
     if @user.valid?
       @token = encode_token({ user_id: @user.id })
-      render json: { user: UserSerializer.new(@user), jwt: @token }, status: :created
+      render json: {
+               user: UserSerializer.new(@user),
+               jwt: @token,
+             },
+             status: :created
     else
-      render json: { error: 'failed to create user' }, status: :unprocessable_entity
+      render json: {
+               error: 'failed to create user',
+             },
+             status: :unprocessable_entity
     end
   end
 
