@@ -100,7 +100,9 @@ GEM
     nio4r (2.5.8)
     nokogiri (1.12.3-x86_64-darwin)
       racc (~> 1.4)
-    puma (5.4.0)
+    nokogiri (1.12.3-x86_64-linux)
+      racc (~> 1.4)
+    puma (5.6.2)
       nio4r (~> 2.0)
     racc (1.5.2)
     rack (2.2.3)
@@ -157,6 +159,7 @@ GEM
 
 PLATFORMS
   x86_64-darwin-20
+  x86_64-linux
 
 DEPENDENCIES
   active_model_serializers (~> 0.10.12)
@@ -166,7 +169,7 @@ DEPENDENCIES
   faker (~> 2.19)
   jwt (~> 2.2)
   listen (~> 3.3)
-  puma (~> 5.0)
+  puma (~> 5.6)
   rack-cors
   rails (~> 6.1.4, >= 6.1.4.1)
   spring
